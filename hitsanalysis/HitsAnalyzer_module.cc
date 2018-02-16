@@ -7,6 +7,11 @@
 // from cetlib version v1_21_00.
 ////////////////////////////////////////////////////////////////////////
 
+
+#include <cstdlib>
+#include <iostream>
+
+
 #include "art/Framework/Core/EDAnalyzer.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Event.h"
@@ -96,7 +101,7 @@ HitsAnalyzer::HitsAnalyzer(fhicl::ParameterSet const & p)
   fSpacePointsTree->Branch("chargeY", &fChargeY, "chargeY/d");
 }
 
-void HitsAnalyzer::analyze(art::Event const & e)
+void HitsAnalyzer::analyze(art::Event const & evt)
 {
   // Hits
   // art::Handle< std::vector<recob::Hit> > hitListHandle;
@@ -119,14 +124,14 @@ void HitsAnalyzer::analyze(art::Event const & e)
   for (size_t i_pfp = 0; i_pfp < pfparticle_handle->size(); i_pfp++)
   {
     recob::PFParticle const &pfparticle = pfparticle_handle->at(i_pfp);
-    fPdgCode = pfparticle->PdgCode();
+    fPdgCode = pfparticle.PdgCode();
 
-    recob::Vertex const &vertex_obj = vertex_per_pfpart.at(ipf_candidate);
+    auto const &vertex_obj = vertex_per_pfpart.at(i_pfp);
     double reco_neutrino_vertex[3];
     vertex_obj->XYZ(reco_neutrino_vertex);
-    vx = reco_neutrino_vertex[0];
-    vy = reco_neutrino_vertex[1];
-    vz = reco_neutrino_vertex[2];
+    fvx = reco_neutrino_vertex[0];
+    fvy = reco_neutrino_vertex[1];
+    fvz = reco_neutrino_vertex[2];
     fVerticesTree->Fill();
   
     // Hits
@@ -143,7 +148,7 @@ void HitsAnalyzer::analyze(art::Event const & e)
     std::vector<art::Ptr<recob::SpacePoint>> spcpnts = spcpnts_per_pfpart.at(i_pfp);
     for (art::Ptr<recob::SpacePoint> &sps : spcpnts)
     {
-      double xyz[3] = sps->XYZ();
+      auto xyz = sps->XYZ();
       fx = xyz[0]; 
       fy = xyz[1];
       fz = xyz[2];
@@ -155,12 +160,11 @@ void HitsAnalyzer::analyze(art::Event const & e)
       for (art::Ptr<recob::Hit> &hit : hits)
       {
         double hit_plane = hit->WireID().Plane;
-        double hit_wire = hit->WireID().Wire;
         double hit_integral = hit->Integral();
-        if (hit_plane == 0) fChargeU += integral;
-        else if (hit_plane == 1) fChargeV += integral;
-        else if (hit_plane == 2) fChargeY += integral;
-        else std::cout << "hit plane != 0, 1, 2, but " << hit_plane << endl; 
+        if (hit_plane == 0) fChargeU += hit_integral;
+        else if (hit_plane == 1) fChargeV += hit_integral;
+        else if (hit_plane == 2) fChargeY += hit_integral;
+        else std::cout << "hit plane != 0, 1, 2, but " << hit_plane << std::endl; 
       }
       fSpacePointsTree->Fill();
     }
