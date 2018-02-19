@@ -31,6 +31,7 @@
 #include "lardataobj/RecoBase/Vertex.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/SpacePoint.h"
+#include "lardataobj/RecoBase/Cluster.h"
 
 #include "TTree.h"
 
@@ -63,11 +64,10 @@ private:
   TTree * fHitsTree;
   int fPlane;
   int fWire;
-  int fCharge;
+  double fCharge;
 
   TTree * fSpacePointsTree;
   double fx, fy, fz, fChargeU, fChargeV, fChargeY;
-  int fEvent;
 };
 
 
@@ -87,8 +87,8 @@ HitsAnalyzer::HitsAnalyzer(fhicl::ParameterSet const & p)
 
   fHitsTree = tfs->make<TTree>("HitsTree", "Hits Tree");
   fHitsTree->Branch("pdg_code", &fPdgCode, "pdg_code/i");
-  fHitsTree->Branch("plane", &fPlane, "plane/d");
-  fHitsTree->Branch("wire", &fWire, "wire/d");
+  fHitsTree->Branch("plane", &fPlane, "plane/i");
+  fHitsTree->Branch("wire", &fWire, "wire/i");
   fHitsTree->Branch("charge", &fCharge, "charge/d");
 
   fSpacePointsTree = tfs->make<TTree>("SpacePointsTree", "Space Points Tree");
@@ -112,13 +112,17 @@ void HitsAnalyzer::analyze(art::Event const & evt)
 
   auto const &pfparticle_handle = 
     evt.getValidHandle<std::vector<recob::PFParticle>>(_pfp_producer);
-  
-  art::FindOneP<recob::Vertex> vertex_per_pfpart(pfparticle_handle, evt, _pfp_producer);
-  art::FindManyP<recob::Hit> hits_per_pfpart(pfparticle_handle, evt, _pfp_producer);
-  art::FindManyP<recob::SpacePoint> 
-    spcpnts_per_pfpart(pfparticle_handle, evt, _pfp_producer);
+  auto const &cluster_handle =
+      evt.getValidHandle<std::vector<recob::Cluster>>(_pfp_producer);
   auto const &spacepoint_handle = 
     evt.getValidHandle<std::vector<recob::SpacePoint>>(_pfp_producer);
+
+  art::FindOneP<recob::Vertex> vertex_per_pfpart(pfparticle_handle, evt, _pfp_producer);
+  art::FindManyP<recob::Cluster> clusters_per_pfpart(pfparticle_handle, evt, _pfp_producer);
+  art::FindManyP<recob::Hit> hits_per_cluster(cluster_handle, evt, _pfp_producer);
+  // art::FindManyP<recob::Hit> hits_per_pfpart(pfparticle_handle, evt, _pfp_producer);
+  art::FindManyP<recob::SpacePoint> spcpnts_per_pfpart(pfparticle_handle, evt, _pfp_producer);
+  
   art::FindManyP<recob::Hit> hits_per_spcpnts(spacepoint_handle, evt, _pfp_producer);
 
   for (size_t i_pfp = 0; i_pfp < pfparticle_handle->size(); i_pfp++)
@@ -126,7 +130,7 @@ void HitsAnalyzer::analyze(art::Event const & evt)
     recob::PFParticle const &pfparticle = pfparticle_handle->at(i_pfp);
     fPdgCode = pfparticle.PdgCode();
 
-    auto const &vertex_obj = vertex_per_pfpart.at(i_pfp);
+    art::Ptr<recob::Vertex> vertex_obj = vertex_per_pfpart.at(i_pfp);
     double reco_neutrino_vertex[3];
     vertex_obj->XYZ(reco_neutrino_vertex);
     fvx = reco_neutrino_vertex[0];
@@ -135,13 +139,18 @@ void HitsAnalyzer::analyze(art::Event const & evt)
     fVerticesTree->Fill();
   
     // Hits
-    std::vector<art::Ptr<recob::Hit>> hits = hits_per_pfpart.at(i_pfp);
-    for (art::Ptr<recob::Hit> &hit : hits)
+    // std::vector<art::Ptr<recob::Hit>> hits = hits_per_pfpart.at(i_pfp);
+    std::vector<art::Ptr<recob::Cluster>> clusters = clusters_per_pfpart.at(i_pfp);
+    for (art::Ptr<recob::Cluster> &cluster : clusters)
     {
-      fPlane = hit->WireID().Plane;
-      fWire = hit->WireID().Wire;
-      fCharge = hit->Integral();
-      fHitsTree->Fill();
+      std::vector<art::Ptr<recob::Hit>> hits = hits_per_cluster.at(cluster.key());
+      for (art::Ptr<recob::Hit> &hit : hits)
+      {
+        fPlane = hit->WireID().Plane;
+        fWire = hit->WireID().Wire;
+        fCharge = hit->Integral();
+        fHitsTree->Fill();
+      }
     }
 
     // Space points
