@@ -29,6 +29,8 @@
 
 #include "lardataobj/RecoBase/PFParticle.h"
 #include "lardataobj/RecoBase/Vertex.h"
+#include "lardataobj/RecoBase/Track.h"
+#include "lardataobj/RecoBase/Shower.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/SpacePoint.h"
 #include "lardataobj/RecoBase/Cluster.h"
@@ -59,7 +61,9 @@ private:
 
   TTree * fVerticesTree;
   int fPdgCode;
-  double fvx, fvy, fvz;
+  double fvx, fvy, fvz, fstartx, fstarty, fstartz;
+  int fNhits, fNclusters;
+  int fRun, fSubrun, fEvent;
 
   TTree * fHitsTree;
   int fPlane;
@@ -78,20 +82,31 @@ HitsAnalyzer::HitsAnalyzer(fhicl::ParameterSet const & p)
 {
   art::ServiceHandle<art::TFileService> tfs;
   
-  fVerticesTree = tfs->make<TTree>("Vertices Tree", "Vertices Tree");
+  fVerticesTree = tfs->make<TTree>("Vertices", "Vertices Tree");
   fVerticesTree->Branch("pdg_code", &fPdgCode, "pdg_code/i");
   fVerticesTree->Branch("vx", &fvx, "vx/d");
   fVerticesTree->Branch("vy", &fvy, "vy/d");
   fVerticesTree->Branch("vz", &fvz, "vz/d");
+  fVerticesTree->Branch("start_x", &fstartx, "start_x/d");
+  fVerticesTree->Branch("start_y", &fstarty, "start_y/d");
+  fVerticesTree->Branch("start_z", &fstartz, "start_z/d");
+  fVerticesTree->Branch("n_hits", &fNhits, "n_hits/i");
+  fVerticesTree->Branch("n_clusters", &fNclusters, "n_clusters/i");
+  fVerticesTree->Branch("event", &fEvent, "event/i");
+  fVerticesTree->Branch("run", &fRun, "run/i");
+  fVerticesTree->Branch("subrun", &fSubrun, "subrun/i");
 
 
-  fHitsTree = tfs->make<TTree>("HitsTree", "Hits Tree");
+  fHitsTree = tfs->make<TTree>("Hits", "Hits Tree");
   fHitsTree->Branch("pdg_code", &fPdgCode, "pdg_code/i");
   fHitsTree->Branch("plane", &fPlane, "plane/i");
   fHitsTree->Branch("wire", &fWire, "wire/i");
   fHitsTree->Branch("charge", &fCharge, "charge/d");
+  fHitsTree->Branch("event", &fEvent, "event/i");
+  fHitsTree->Branch("run", &fRun, "run/i");
+  fHitsTree->Branch("subrun", &fSubrun, "subrun/i");
 
-  fSpacePointsTree = tfs->make<TTree>("SpacePointsTree", "Space Points Tree");
+  fSpacePointsTree = tfs->make<TTree>("SpacePoints", "Space Points Tree");
   fSpacePointsTree->Branch("pdg_code", &fPdgCode, "pdg_code/i");
   fSpacePointsTree->Branch("x", &fx, "x/d");
   fSpacePointsTree->Branch("y", &fy, "y/d");
@@ -99,16 +114,16 @@ HitsAnalyzer::HitsAnalyzer(fhicl::ParameterSet const & p)
   fSpacePointsTree->Branch("chargeU", &fChargeU, "chargeU/d");
   fSpacePointsTree->Branch("chargeV", &fChargeV, "chargeV/d");
   fSpacePointsTree->Branch("chargeY", &fChargeY, "chargeY/d");
+  fSpacePointsTree->Branch("event", &fEvent, "event/i");
+  fSpacePointsTree->Branch("run", &fRun, "run/i");
+  fSpacePointsTree->Branch("subrun", &fSubrun, "subrun/i");
 }
 
 void HitsAnalyzer::analyze(art::Event const & evt)
 {
-  // Hits
-  // art::Handle< std::vector<recob::Hit> > hitListHandle;
-  // std::vector<art::Ptr<recob::Hit> > hitlist;
-  // if (evt.getByLabel(fHitsModuleLabel,hitListHandle))
-  //   art::fill_ptr_vector(hitlist, hitListHandle);
-
+  fRun = evt.run();
+  fSubrun = evt.subRun();
+  fEvent = evt.id().event();
 
   auto const &pfparticle_handle = 
     evt.getValidHandle<std::vector<recob::PFParticle>>(_pfp_producer);
@@ -118,11 +133,11 @@ void HitsAnalyzer::analyze(art::Event const & evt)
     evt.getValidHandle<std::vector<recob::SpacePoint>>(_pfp_producer);
 
   art::FindOneP<recob::Vertex> vertex_per_pfpart(pfparticle_handle, evt, _pfp_producer);
+  art::FindOneP<recob::Shower> shower_per_pfpart(pfparticle_handle, evt, _pfp_producer);
+  art::FindOneP<recob::Track> track_per_pfpart(pfparticle_handle, evt, _pfp_producer);
   art::FindManyP<recob::Cluster> clusters_per_pfpart(pfparticle_handle, evt, _pfp_producer);
   art::FindManyP<recob::Hit> hits_per_cluster(cluster_handle, evt, _pfp_producer);
-  // art::FindManyP<recob::Hit> hits_per_pfpart(pfparticle_handle, evt, _pfp_producer);
   art::FindManyP<recob::SpacePoint> spcpnts_per_pfpart(pfparticle_handle, evt, _pfp_producer);
-  
   art::FindManyP<recob::Hit> hits_per_spcpnts(spacepoint_handle, evt, _pfp_producer);
 
   for (size_t i_pfp = 0; i_pfp < pfparticle_handle->size(); i_pfp++)
@@ -130,20 +145,56 @@ void HitsAnalyzer::analyze(art::Event const & evt)
     recob::PFParticle const &pfparticle = pfparticle_handle->at(i_pfp);
     fPdgCode = pfparticle.PdgCode();
 
-    art::Ptr<recob::Vertex> vertex_obj = vertex_per_pfpart.at(i_pfp);
-    double reco_neutrino_vertex[3];
-    vertex_obj->XYZ(reco_neutrino_vertex);
-    fvx = reco_neutrino_vertex[0];
-    fvy = reco_neutrino_vertex[1];
-    fvz = reco_neutrino_vertex[2];
-    fVerticesTree->Fill();
-  
+    if (fPdgCode == 11)
+    {
+      try
+      {
+        art::Ptr<recob::Shower> pf_obj = shower_per_pfpart.at(i_pfp);
+        fstartx = pf_obj->ShowerStart().X();
+        fstarty = pf_obj->ShowerStart().Y();
+        fstartz = pf_obj->ShowerStart().Z();
+      }
+      catch (...)
+      {
+        fstartx = 1000000.;
+        fstarty = 1000000.;
+        fstartz = 1000000.;
+        std::cout << "No start point found for shower " << fPdgCode << std::endl;
+      }
+    }
+    else if (fPdgCode == 13)
+    {
+      try
+      {
+        art::Ptr<recob::Track> pf_obj = track_per_pfpart.at(i_pfp);
+        fstartx = pf_obj->Start().X();
+        fstarty = pf_obj->Start().Y();
+        fstartz = pf_obj->Start().Z();
+      }
+      catch (...)
+      {
+        fstartx = 1000000.;
+        fstarty = 1000000.;
+        fstartz = 1000000.;
+        std::cout << "No start point found for track " << fPdgCode << std::endl;
+      }
+    }
+    else
+    {
+      fstartx = 1000000.;
+      fstarty = 1000000.;
+      fstartz = 1000000.;
+    }
+      
+    fNhits = 0;    
+    fNclusters = 0;   
     // Hits
-    // std::vector<art::Ptr<recob::Hit>> hits = hits_per_pfpart.at(i_pfp);
     std::vector<art::Ptr<recob::Cluster>> clusters = clusters_per_pfpart.at(i_pfp);
     for (art::Ptr<recob::Cluster> &cluster : clusters)
     {
+      fNclusters += 1;
       std::vector<art::Ptr<recob::Hit>> hits = hits_per_cluster.at(cluster.key());
+      fNhits += hits.size();
       for (art::Ptr<recob::Hit> &hit : hits)
       {
         fPlane = hit->WireID().Plane;
@@ -152,6 +203,25 @@ void HitsAnalyzer::analyze(art::Event const & evt)
         fHitsTree->Fill();
       }
     }
+
+    try
+    {
+      art::Ptr<recob::Vertex> vertex_obj = vertex_per_pfpart.at(i_pfp);
+      double reco_neutrino_vertex[3];
+      vertex_obj->XYZ(reco_neutrino_vertex);
+      fvx = reco_neutrino_vertex[0];
+      fvy = reco_neutrino_vertex[1];
+      fvz = reco_neutrino_vertex[2];
+    }
+    catch (...)
+    {
+      fvx = 1000000.;
+      fvy = 1000000.;
+      fvz = 1000000.;
+      std::cout << "No vertex found for " << fPdgCode << " with " << fNhits << std::endl;
+    }
+
+    fVerticesTree->Fill();
 
     // Space points
     std::vector<art::Ptr<recob::SpacePoint>> spcpnts = spcpnts_per_pfpart.at(i_pfp);
