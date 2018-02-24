@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!DOCTYPE project [
+<!ENTITY name "bnb_nu_cosmic">
+<!ENTITY version "v06_26_01_10">
+<!ENTITY qualifier "e10:prof">
+<!ENTITY dataset "prodgenie_bnb_nu_cosmic_uboone_mcc8.6_reco2">
+<!ENTITY user "foppiani">
+]>
+
+<project name="&name;">
+    <!-- Doesn't matter for non-generating jobs -->
+    <numevents>1000000</numevents>
+
+    <!--  Operating System  -->
+    <os>SL6</os>
+
+    <!--  Batch resources  -->
+    <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
+
+
+    <!--  Larsoft information  -->
+    <larsoft>
+        <tag>&version;</tag>
+        <qual>&qualifier;</qual>
+        <local>/uboone/app/users/foppiani/Binaries/MyLarsoft/srcs/tar/hits_analyzer.tar</local>
+        <fcldir>/uboone/app/users/foppiani/Binaries/MyLarsoft/srcs/hitsanalysis/hitsanalysis/job</fcldir>
+    </larsoft>
+
+    <!--  Project stages  -->
+    <stage name="hits">
+        <fcl>hitsanalysis.fcl</fcl>
+        <outdir>/uboone/data/users/&user;/out/&name;</outdir>
+        <logdir>/uboone/data/users/&user;/log/&name;</logdir>
+        <workdir>/uboone/data/users/&user;/work/&name;</workdir>
+        <inputdef>&dataset;</inputdef>
+        <numjobs>2</numjobs>
+        <disk>16GB</disk>
+        <memory>4096</memory>
+        <maxfilesperjob>50</maxfilesperjob>
+        <datatier>reconstructed</datatier>
+        <jobsub>--expected-lifetime=24h -Q</jobsub>
+        <schema>root</schema>
+    </stage>
+    <!--  file type  -->
+    <!-- <filetype>mc</filetype> -->
+    <!--  run type  -->
+    <!-- <runtype>physics</runtype> -->
+</project>

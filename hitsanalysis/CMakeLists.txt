@@ -4,7 +4,6 @@ link_libraries( -L$ENV{BOOST_LIB} -lboost_system ${ROOTLIB})
 
 art_make(
           LIBRARY_NAME
-                        ElectronFilter
           LIB_LIBRARIES
                         larpandora_LArPandoraInterface
                         lardataobj_RecoBase
@@ -17,7 +16,6 @@ art_make(
 			art_Persistency_Common canvas_Persistency_Common
 			art_Persistency_Provenance canvas_Persistency_Provenance
 			art_Utilities canvas_Utilities
-#                        uboone_SpaceChargeServices_SpaceChargeServiceMicroBooNE_service
                         ${ART_FRAMEWORK_CORE}
                         ${ART_FRAMEWORK_IO_SOURCES}
                         ${ART_FRAMEWORK_PRINCIPAL}
@@ -37,17 +35,8 @@ art_make(
                         ${ROOT_GDML}
                         ${ROOT_BASIC_LIB_LIST}
                         ${SIMULATIONBASE}
-                   	larsim_MCCheater_BackTracker_service
 
-                        larevt_CalibrationDBI_IOVData
-                        larevt_CalibrationDBI_Providers
-
-                        uboonecode_uboone_SelectionTool_OpT0FinderBase
-                        uboonecode_uboone_SelectionTool_OpT0FinderAlgorithms
-                        uboonecode_uboone_BasicTool_GeoAlgo
-                        uboone_UBFlashFinder
           MODULE_LIBRARIES
-                        ElectronFilter
                         larpandora_LArPandoraInterface
 			larsim_MCCheater_BackTracker_service
                         lardataobj_RecoBase
@@ -79,11 +68,6 @@ art_make(
                         ${ROOT_GDML}
                         ${ROOT_BASIC_LIB_LIST}
                         ${SIMULATIONBASE}
-
-                        uboonecode_uboone_BasicTool_GeoAlgo
-                        uboonecode_uboone_SelectionTool_OpT0FinderBase
-                        uboonecode_uboone_SelectionTool_OpT0FinderAlgorithms
-                        uboone_UBFlashFinder
 )
 
 add_subdirectory(job)

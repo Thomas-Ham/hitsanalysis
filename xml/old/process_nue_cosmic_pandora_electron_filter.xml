@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!DOCTYPE project [
+<!ENTITY name "bnb_nue_cosmic_pandora_electron_filter">
+<!ENTITY version "v06_26_01_10">
+<!ENTITY qualifier "e10:prof">
+<!ENTITY dataset "prodgenie_bnb_intrinsic_nue_cosmic_uboone_mcc8.6_reco2">
+<!ENTITY user "srsoleti">
+]>
+<project name="&name;">
+    <!-- Doesn't matter for non-generating jobs -->
+    <numevents>1000000</numevents>
+
+    <!--  Operating System  -->
+    <os>SL6</os>
+
+    <!--  Batch resources  -->
+    <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
+
+
+    <!--  Larsoft information  -->
+    <larsoft>
+        <tag>&version;</tag>
+        <qual>&qualifier;</qual>
+        <local>/pnfs/uboone/scratch/users/&user;/&version;.tar</local>
+    </larsoft>
+
+    <!--  Project stages  -->
+    <stage name="selection">
+        <fcl>run_PandoraOnly.fcl</fcl>
+        <outdir>/pnfs/uboone/scratch/users/&user;/&version;/lee/&name;</outdir>
+        <logdir>/pnfs/uboone/scratch/users/&user;/&version;/lee/&name;</logdir>
+        <workdir>/pnfs/uboone/scratch/users/&user;/work/lee/&name;</workdir>
+        <inputdef>&dataset;</inputdef>
+        <numjobs>308</numjobs>
+        <disk>16GB</disk>
+        <memory>4096</memory>
+        <maxfilesperjob>40</maxfilesperjob>
+        <datatier>filtered</datatier>
+        <jobsub>--expected-lifetime=24h -Q</jobsub>
+    </stage>
+    <!--  file type  -->
+    <!-- <filetype>mc</filetype> -->
+    <!--  run type  -->
+    <!-- <runtype>physics</runtype> -->
+</project>

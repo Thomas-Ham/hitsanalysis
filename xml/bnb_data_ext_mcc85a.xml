@@ -1,0 +1,44 @@
+<project name="bnbext_data">
+    <!--  Project size  -->
+    <numevents>380640</numevents>
+
+    <!--  Operating System  -->
+    <os>SL6</os>
+
+    <!--  Batch resources  -->
+    <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
+
+
+    <!--  Larsoft information  -->
+    <larsoft>
+        <tag>v06_26_01_10</tag>
+        <qual>e10:prof</qual>
+        <local>/uboone/app/users/foppiani/Binaries/MyLarsoft/srcs/tar/hits_analyzer.tar</local>
+        <fcldir>/uboone/app/users/foppiani/Binaries/MyLarsoft/srcs/hitsanalysis/hitsanalysis/job</fcldir>
+    </larsoft>
+    
+    <!--  Project stages  -->
+    <stage name="hits">
+        <fcl>hitsanalysis.fcl</fcl>
+        <outdir>/uboone/data/users/foppiani/out/data_ext_bnb_mcc85a</outdir>
+        <logdir>/uboone/data/users/foppiani/log/data_ext_bnb_mcc85a</logdir>
+        <workdir>/uboone/data/users/foppiani/workout/data_ext_bnb_mcc85a</workdir>
+        <inputdef>prod_reco_optfilter_extbnb_v11_mcc8a</inputdef>
+        
+        <!-- <output> -->
+        <!-- bnb_nu_cosmic_pandora_electron_filter${PROCESS}_%tc_gen.root -->
+        <!-- </output> -->
+
+        <numjobs>2</numjobs>
+        <disk>10GB</disk>
+        <memory>4096</memory>
+        <maxfilesperjob>40</maxfilesperjob>
+        <datatier>filtered</datatier>
+        <!-- <defname>prodgenie_bnb_intrinsic_nue_uboone_mcc8_detsim</defname> -->
+        <jobsub>--expected-lifetime=2h -Q</jobsub>
+    </stage>
+    <!--  file type  -->
+    <!-- <filetype>mc</filetype> -->
+    <!--  run type  -->
+    <!-- <runtype>physics</runtype> -->
+</project>
