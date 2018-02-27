@@ -30,12 +30,13 @@
         <!-- </output> -->
 
         <numjobs>2</numjobs>
-        <disk>10GB</disk>
-        <memory>4096</memory>
-        <maxfilesperjob>40</maxfilesperjob>
-        <datatier>filtered</datatier>
+        <disk>2GB</disk>
+        <memory>1024</memory>
+        <maxfilesperjob>100</maxfilesperjob>
+        <datatier>hits</datatier>
         <!-- <defname>prodgenie_bnb_intrinsic_nue_uboone_mcc8_detsim</defname> -->
-        <jobsub>--expected-lifetime=2h -Q</jobsub>
+        <jobsub>--expected-lifetime=2h -Q --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+        <jobsub_start>--append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
     </stage>
     <!--  file type  -->
     <!-- <filetype>mc</filetype> -->

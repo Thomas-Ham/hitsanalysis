@@ -5,7 +5,8 @@ BEGIN_PROLOG
 HitsAnalyzer:
 { 
     module_type:                "HitsAnalyzer"
-
+    pfp_producer:               "pandoraNu"
+    is_lite:                    true
 }
 
 END_PROLOG
@@ -54,16 +55,16 @@ physics: {
   }
   analyzers: {
      # ParameterSets for zero or more analyzer modules
-     HitsAnalyzer: { module_type: HitsAnalyzer}	
+     HitsAnalyzer: @local::HitsAnalyzer
   }
 
   filters: {
      # ParameterSets for zero or more filter modules
   }
 
-  analyzeIt:[
-          
-             ]
+  # analyzeIt:[
+  #        
+  #           ]
   path0: [ HitsAnalyzer ]
   stream: [ out0 ]
   #path1 : [  comma separated list of module labels of producer or filter modules  ]
@@ -75,10 +76,10 @@ physics: {
 
 }
 
-outputs: {
-    out0: { module_type: RootOutput
-            fileName: "output_file_reco12.root"
-            SelectEvents: { SelectEvents: [ path0 ] }
-            compressionLevel: 1
-            }
-}
+outputs.out0: { module_type: RootOutput
+                fileName:    "output.root" 
+                dataTier:    "hits" 
+                streamName:  "all" 
+                SelectEvents: [ path0 ]
+                compressionLevel: 1
+              }

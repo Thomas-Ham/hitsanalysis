@@ -1,6 +1,6 @@
-<project name="bnb_data">
+<project name="bnbext_data">
     <!--  Project size  -->
-    <numevents>690000</numevents>
+    <numevents>380640</numevents>
 
     <!--  Operating System  -->
     <os>SL6</os>
@@ -13,28 +13,29 @@
     <larsoft>
         <tag>v06_26_01_10</tag>
         <qual>e10:prof</qual>
-        <local>/uboone/app/users/foppiani/Binaries/MyLarsoft/srcs/tar/hits_analyzer.tar</local>
+        <local>/uboone/app/users/foppiani/Binaries/MyLarsoft/srcs/tar/v2/hits_analyzer.tar</local>
         <fcldir>/uboone/app/users/foppiani/Binaries/MyLarsoft/srcs/hitsanalysis/hitsanalysis/job</fcldir>
     </larsoft>
     
     <!--  Project stages  -->
     <stage name="hits">
         <fcl>hitsanalysis.fcl</fcl>
-        <outdir>/uboone/data/users/foppiani/out/data_bnb_mcc85a</outdir>
-        <logdir>/uboone/data/users/foppiani/log/data_bnb_mcc85a</logdir>
-        <workdir>/uboone/data/users/foppiani/work/data_bnb_mcc85a</workdir>
-        <inputdef>prod_reco_optfilter_bnb_v11_unblind_mcc8a</inputdef>
+        <outdir>/uboone/data/users/foppiani/out/data_ext_bnb_mcc85a/normal</outdir>
+        <logdir>/uboone/data/users/foppiani/log/data_ext_bnb_mcc85a/normal</logdir>
+        <workdir>/uboone/data/users/foppiani/workout/data_ext_bnb_mcc85a/normal</workdir>
+        <inputdef>prod_reco_optfilter_extbnb_v11_mcc8a</inputdef>
+        
         <!-- <output> -->
-            <!-- bnb_nu_cosmic_pandora_electron_filter${PROCESS}_%tc_gen.root -->
+        <!-- bnb_nu_cosmic_pandora_electron_filter${PROCESS}_%tc_gen.root -->
         <!-- </output> -->
 
         <numjobs>2</numjobs>
-        <disk>10GB</disk>
-        <memory>4096</memory>
-        <maxfilesperjob>40</maxfilesperjob>
-        <datatier>filtered</datatier>
+        <disk>4GB</disk>
+        <memory>2GB</memory>
+        <maxfilesperjob>100</maxfilesperjob>
+        <datatier>hits</datatier>
         <!-- <defname>prodgenie_bnb_intrinsic_nue_uboone_mcc8_detsim</defname> -->
-        <jobsub>--expected-lifetime=24h -Q --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+        <jobsub>--expected-lifetime=2h -Q --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
         <jobsub_start>--append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
     </stage>
     <!--  file type  -->

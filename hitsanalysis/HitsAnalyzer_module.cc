@@ -52,9 +52,11 @@ public:
 
   // Required functions.
   void analyze(art::Event const &e) override;
+  void reconfigure(fhicl::ParameterSet const &p) override;
 
 private:
-  std::string _pfp_producer = "pandoraNu";
+  std::string m_pfp_producer;
+  bool m_is_lite;
 
   TTree *fPFParticlesTree;
   int fPdgCode;
@@ -82,6 +84,8 @@ HitsAnalyzer::HitsAnalyzer(fhicl::ParameterSet const &p)
 {
   art::ServiceHandle<art::TFileService> tfs;
 
+  this->reconfigure(p);
+
   fPFParticlesTree = tfs->make<TTree>("PFParticles", "PFParticles Tree");
   fPFParticlesTree->Branch("pdg_code", &fPdgCode, "pdg_code/i");
   fPFParticlesTree->Branch("vx", &fvx, "vx/d");
@@ -107,26 +111,35 @@ HitsAnalyzer::HitsAnalyzer(fhicl::ParameterSet const &p)
   fClustersTree->Branch("run", &fRun, "run/i");
   fClustersTree->Branch("subrun", &fSubrun, "subrun/i");
 
-  fHitsTree = tfs->make<TTree>("Hits", "Hits Tree");
-  fHitsTree->Branch("pdg_code", &fPdgCode, "pdg_code/i");
-  fHitsTree->Branch("plane", &fPlane, "plane/i");
-  fHitsTree->Branch("wire", &fWire, "wire/i");
-  fHitsTree->Branch("charge", &fCharge, "charge/d");
-  fHitsTree->Branch("event", &fEvent, "event/i");
-  fHitsTree->Branch("run", &fRun, "run/i");
-  fHitsTree->Branch("subrun", &fSubrun, "subrun/i");
+  if (m_is_lite == false)
+  {
+    fHitsTree = tfs->make<TTree>("Hits", "Hits Tree");
+    fHitsTree->Branch("pdg_code", &fPdgCode, "pdg_code/i");
+    fHitsTree->Branch("plane", &fPlane, "plane/i");
+    fHitsTree->Branch("wire", &fWire, "wire/i");
+    fHitsTree->Branch("charge", &fCharge, "charge/d");
+    fHitsTree->Branch("event", &fEvent, "event/i");
+    fHitsTree->Branch("run", &fRun, "run/i");
+    fHitsTree->Branch("subrun", &fSubrun, "subrun/i");
 
-  fSpacePointsTree = tfs->make<TTree>("SpacePoints", "Space Points Tree");
-  fSpacePointsTree->Branch("pdg_code", &fPdgCode, "pdg_code/i");
-  fSpacePointsTree->Branch("x", &fx, "x/d");
-  fSpacePointsTree->Branch("y", &fy, "y/d");
-  fSpacePointsTree->Branch("z", &fz, "z/d");
-  fSpacePointsTree->Branch("chargeU", &fChargeU, "chargeU/d");
-  fSpacePointsTree->Branch("chargeV", &fChargeV, "chargeV/d");
-  fSpacePointsTree->Branch("chargeY", &fChargeY, "chargeY/d");
-  fSpacePointsTree->Branch("event", &fEvent, "event/i");
-  fSpacePointsTree->Branch("run", &fRun, "run/i");
-  fSpacePointsTree->Branch("subrun", &fSubrun, "subrun/i");
+    fSpacePointsTree = tfs->make<TTree>("SpacePoints", "Space Points Tree");
+    fSpacePointsTree->Branch("pdg_code", &fPdgCode, "pdg_code/i");
+    fSpacePointsTree->Branch("x", &fx, "x/d");
+    fSpacePointsTree->Branch("y", &fy, "y/d");
+    fSpacePointsTree->Branch("z", &fz, "z/d");
+    fSpacePointsTree->Branch("chargeU", &fChargeU, "chargeU/d");
+    fSpacePointsTree->Branch("chargeV", &fChargeV, "chargeV/d");
+    fSpacePointsTree->Branch("chargeY", &fChargeY, "chargeY/d");
+    fSpacePointsTree->Branch("event", &fEvent, "event/i");
+    fSpacePointsTree->Branch("run", &fRun, "run/i");
+    fSpacePointsTree->Branch("subrun", &fSubrun, "subrun/i");
+  }
+}
+
+void HitsAnalyzer::reconfigure(fhicl::ParameterSet const &p)
+{
+  m_pfp_producer = p.get<std::string>("pfp_producer", "pandoraNu");
+  m_is_lite = p.get<bool>("is_lite", false);
 }
 
 void HitsAnalyzer::analyze(art::Event const &evt)
@@ -136,19 +149,18 @@ void HitsAnalyzer::analyze(art::Event const &evt)
   fEvent = evt.id().event();
 
   auto const &pfparticle_handle =
-      evt.getValidHandle<std::vector<recob::PFParticle>>(_pfp_producer);
+      evt.getValidHandle<std::vector<recob::PFParticle>>(m_pfp_producer);
   auto const &cluster_handle =
-      evt.getValidHandle<std::vector<recob::Cluster>>(_pfp_producer);
-  auto const &spacepoint_handle =
-      evt.getValidHandle<std::vector<recob::SpacePoint>>(_pfp_producer);
+      evt.getValidHandle<std::vector<recob::Cluster>>(m_pfp_producer);
 
-  art::FindOneP<recob::Vertex> vertex_per_pfpart(pfparticle_handle, evt, _pfp_producer);
-  art::FindOneP<recob::Shower> shower_per_pfpart(pfparticle_handle, evt, _pfp_producer);
-  art::FindOneP<recob::Track> track_per_pfpart(pfparticle_handle, evt, _pfp_producer);
-  art::FindManyP<recob::Cluster> clusters_per_pfpart(pfparticle_handle, evt, _pfp_producer);
-  art::FindManyP<recob::Hit> hits_per_cluster(cluster_handle, evt, _pfp_producer);
-  art::FindManyP<recob::SpacePoint> spcpnts_per_pfpart(pfparticle_handle, evt, _pfp_producer);
-  art::FindManyP<recob::Hit> hits_per_spcpnts(spacepoint_handle, evt, _pfp_producer);
+  art::FindOneP<recob::Vertex> vertex_per_pfpart(pfparticle_handle, evt, m_pfp_producer);
+  art::FindManyP<recob::Cluster> clusters_per_pfpart(pfparticle_handle, evt, m_pfp_producer);
+  art::FindManyP<recob::Hit> hits_per_cluster(cluster_handle, evt, m_pfp_producer);
+  auto const &spacepoint_handle =
+        evt.getValidHandle<std::vector<recob::SpacePoint>>(m_pfp_producer);
+
+  art::FindManyP<recob::SpacePoint> spcpnts_per_pfpart(pfparticle_handle, evt, m_pfp_producer);
+  art::FindManyP<recob::Hit> hits_per_spcpnts(spacepoint_handle, evt, m_pfp_producer);
 
   for (size_t i_pfp = 0; i_pfp < pfparticle_handle->size(); i_pfp++)
   {
@@ -173,17 +185,12 @@ void HitsAnalyzer::analyze(art::Event const &evt)
       fClusterPosition = (cluster->EndWire() + cluster->StartWire()) / 2.;
       fClustersTree->Fill();
 
-      std::cout << "cluster for " << fPdgCode << " with " << fClusterCharge << "   " << cluster->Integral() << fClusterNhits << "   " << cluster->NHits() << std::endl;
+      fNhits += fClusterNhits;
 
       std::vector<art::Ptr<recob::Hit>> hits = hits_per_cluster.at(cluster.key());
-      fNhits += hits.size();
       for (art::Ptr<recob::Hit> &hit : hits)
       {
         fPlane = hit->WireID().Plane;
-        fWire = hit->WireID().Wire;
-        fCharge = hit->Integral();
-        fHitsTree->Fill();
-
         if (fPlane == 0)
         {
           fNhitsU += 1;
@@ -195,6 +202,13 @@ void HitsAnalyzer::analyze(art::Event const &evt)
         else if (fPlane == 2)
         {
           fNhitsY += 1;
+        }
+
+        if (m_is_lite == false)
+        {
+          fWire = hit->WireID().Wire;
+          fCharge = hit->Integral();
+          fHitsTree->Fill();
         }
       }
     }
@@ -218,33 +232,36 @@ void HitsAnalyzer::analyze(art::Event const &evt)
 
     fPFParticlesTree->Fill();
 
-    // Space points
-    std::vector<art::Ptr<recob::SpacePoint>> spcpnts = spcpnts_per_pfpart.at(i_pfp);
-    for (art::Ptr<recob::SpacePoint> &sps : spcpnts)
+    if (m_is_lite == false)
     {
-      auto xyz = sps->XYZ();
-      fx = xyz[0];
-      fy = xyz[1];
-      fz = xyz[2];
-
-      std::vector<art::Ptr<recob::Hit>> hits = hits_per_spcpnts.at(sps.key());
-      fChargeU = 0;
-      fChargeV = 0;
-      fChargeY = 0;
-      for (art::Ptr<recob::Hit> &hit : hits)
+      // Space points
+      std::vector<art::Ptr<recob::SpacePoint>> spcpnts = spcpnts_per_pfpart.at(i_pfp);
+      for (art::Ptr<recob::SpacePoint> &sps : spcpnts)
       {
-        double hit_plane = hit->WireID().Plane;
-        double hit_integral = hit->Integral();
-        if (hit_plane == 0)
-          fChargeU += hit_integral;
-        else if (hit_plane == 1)
-          fChargeV += hit_integral;
-        else if (hit_plane == 2)
-          fChargeY += hit_integral;
-        else
-          std::cout << "hit plane != 0, 1, 2, but " << hit_plane << std::endl;
+        auto xyz = sps->XYZ();
+        fx = xyz[0];
+        fy = xyz[1];
+        fz = xyz[2];
+
+        std::vector<art::Ptr<recob::Hit>> hits = hits_per_spcpnts.at(sps.key());
+        fChargeU = 0;
+        fChargeV = 0;
+        fChargeY = 0;
+        for (art::Ptr<recob::Hit> &hit : hits)
+        {
+          double hit_plane = hit->WireID().Plane;
+          double hit_integral = hit->Integral();
+          if (hit_plane == 0)
+            fChargeU += hit_integral;
+          else if (hit_plane == 1)
+            fChargeV += hit_integral;
+          else if (hit_plane == 2)
+            fChargeY += hit_integral;
+          else
+            std::cout << "hit plane != 0, 1, 2, but " << hit_plane << std::endl;
+        }
+        fSpacePointsTree->Fill();
       }
-      fSpacePointsTree->Fill();
     }
   }
 }
