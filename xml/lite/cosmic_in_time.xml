@@ -1,49 +1,59 @@
 <?xml version="1.0"?>
 <!DOCTYPE project [
-<!ENTITY name "cosmic_in_time">
-<!ENTITY version "v06_26_01_10">
+<!ENTITY name "hits_lite_cosmic_in_time">
+<!ENTITY release "v06_26_01_10">
 <!ENTITY qualifier "e10:prof">
-<!ENTITY dataset "prodcosmics_corsika_cmc_uboone_intime_mcc8.6_reco2_dev">
+<!ENTITY file_type "mc">
+<!ENTITY run_type "physics">
+<!ENTITY project_version "1">
 <!ENTITY user "foppiani">
+<!ENTITY dataset "prodcosmics_corsika_cmc_uboone_intime_mcc8.7_reco2_dev">
+<!ENTITY stage_name "hits">
+<!ENTITY tarball_location "/uboone/app/users/foppiani/Binaries/MyLarsoft/srcs/tar/v3/hits_analyzer.tar">
+<!ENTITY fcl_directory "/uboone/app/users/foppiani/Binaries/MyLarsoft/srcs/hitsanalysis/hitsanalysis/job/">
+<!ENTITY fcl_name "hitsanalysis.fcl">
+<!ENTITY main_dir "/uboone/data/users/foppiani/">
+<!ENTITY temp_dir "/uboone/data/users/foppiani/temp/temp/">
+<!ENTITY book_dir "/uboone/data/users/foppiani/temp/book/">
 ]>
 
+
 <project name="&name;">
-    <!-- Doesn't matter for non-generating jobs -->
-    <numevents>1000000</numevents>
 
-    <!--  Operating System  -->
-    <os>SL6</os>
+  <!-- Group -->
+  <group>uboone</group>
 
-    <!--  Batch resources  -->
-    <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
+  <!-- Operating System -->
+  <os>SL6</os>
 
+  <!-- Batch resources -->
+  <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
 
-    <!--  Larsoft information  -->
-    <larsoft>
-        <tag>&version;</tag>
-        <qual>&qualifier;</qual>
-        <local>/uboone/app/users/foppiani/Binaries/MyLarsoft/srcs/tar/v2/hits_analyzer.tar</local>
-        <fcldir>/uboone/app/users/&user;/Binaries/MyLarsoft/srcs/hitsanalysis/hitsanalysis/job</fcldir>
-    </larsoft>
+  <!-- Larsoft information -->
+  <larsoft>
+    <tag>&release;</tag>
+    <qual>&qualifier;</qual>
+    <local>&tarball_location;</local>
+    <fcldir>&fcl_directory;</fcldir>
+  </larsoft>
 
-    <!--  Project stages  -->
-    <stage name="hits">
-        <fcl>hitsanalysis.fcl</fcl>
-        <outdir>/pnfs/uboone/scratch/users/&user;/out/&name;/lite</outdir>
-        <logdir>/pnfs/uboone/scratch/users/&user;/log/&name;/lite</logdir>
-        <workdir>/pnfs/uboone/scratch/users/&user;/work/&name;/lite</workdir>
-        <inputdef>&dataset;</inputdef>
-        <numjobs>500</numjobs>
-        <disk>4GB</disk>
-        <memory>2048</memory>
-        <maxfilesperjob>100</maxfilesperjob>
-        <datatier>hits</datatier>
-        <jobsub>--expected-lifetime=4h -Q --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
-        <jobsub_start>--append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
-        <schema>root</schema>
-    </stage>
-    <!--  file type  -->
-    <!-- <filetype>mc</filetype> -->
-    <!--  run type  -->
-    <!-- <runtype>physics</runtype> -->
+  <!-- Project stages -->
+
+  <stage name="&stage_name;">
+    <fcl>&fcl_name;</fcl>
+    <inputdef>&dataset;</inputdef>
+
+    <outdir>&main_dir;&name;/v&project_version;/out/</outdir>
+    <logdir>&main_dir;&name;/v&project_version;/log/</logdir>
+    <workdir>&main_dir;&name;/v&project_version;/work/</workdir>
+    <bookdir>&book_dir;&name;/v&project_version;/<bookdir>
+
+    <numjobs>2</numjobs>
+    <disk>1GB</disk>
+    <memory>1024</memory>
+    <maxfilesperjob>1</maxfilesperjob>
+    <schema>root</schema>
+    <jobsub>  --expected-lifetime=2h -q --generate-email-summary </jobsub>
+  </stage>
+
 </project>

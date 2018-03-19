@@ -29,7 +29,7 @@
         <!-- bnb_nu_cosmic_pandora_electron_filter${PROCESS}_%tc_gen.root -->
         <!-- </output> -->
 
-        <numjobs>500</numjobs>
+        <numjobs>70</numjobs>
         <disk>4GB</disk>
         <memory>2048</memory>
         <maxfilesperjob>100</maxfilesperjob>

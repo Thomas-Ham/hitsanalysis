@@ -61,7 +61,8 @@ private:
   TTree *fPFParticlesTree;
   int fPdgCode;
   double fvx, fvy, fvz;
-  int fNhits, fNclusters;
+  double fStartx, fStarty, fStartz;
+  int fNhits, fNclusters, fNvertices, fNshowers_or_tracks;
   int fNhitsU, fNhitsV, fNhitsY;
   int fRun, fSubrun, fEvent;
 
@@ -91,11 +92,16 @@ HitsAnalyzer::HitsAnalyzer(fhicl::ParameterSet const &p)
   fPFParticlesTree->Branch("vx", &fvx, "vx/d");
   fPFParticlesTree->Branch("vy", &fvy, "vy/d");
   fPFParticlesTree->Branch("vz", &fvz, "vz/d");
+  fPFParticlesTree->Branch("start_x", &fStartx, "start_x/d");
+  fPFParticlesTree->Branch("start_y", &fStarty, "start_y/d");
+  fPFParticlesTree->Branch("start_z", &fStartz, "start_z/d");
   fPFParticlesTree->Branch("n_hits", &fNhits, "n_hits/i");
   fPFParticlesTree->Branch("n_hitsU", &fNhitsU, "n_hitsU/i");
   fPFParticlesTree->Branch("n_hitsV", &fNhitsV, "n_hitsV/i");
   fPFParticlesTree->Branch("n_hitsY", &fNhitsY, "n_hitsY/i");
   fPFParticlesTree->Branch("n_clusters", &fNclusters, "n_clusters/i");
+  fPFParticlesTree->Branch("n_vertices", &fNvertices, "n_vertices/i");
+  fPFParticlesTree->Branch("n_showers_or_tracks", &fNshowers_or_tracks, "n_showers_or_tracks/i");
   fPFParticlesTree->Branch("event", &fEvent, "event/i");
   fPFParticlesTree->Branch("run", &fRun, "run/i");
   fPFParticlesTree->Branch("subrun", &fSubrun, "subrun/i");
@@ -147,13 +153,17 @@ void HitsAnalyzer::analyze(art::Event const &evt)
   fRun = evt.run();
   fSubrun = evt.subRun();
   fEvent = evt.id().event();
+  // std::cout << "Event: " << fEvent << ", Run: " << fRun << ", subRun: " << fSubrun << std::endl;
 
   auto const &pfparticle_handle =
       evt.getValidHandle<std::vector<recob::PFParticle>>(m_pfp_producer);
   auto const &cluster_handle =
       evt.getValidHandle<std::vector<recob::Cluster>>(m_pfp_producer);
 
-  art::FindOneP<recob::Vertex> vertex_per_pfpart(pfparticle_handle, evt, m_pfp_producer);
+  art::FindManyP<recob::Shower> showers_per_pfpart(pfparticle_handle, evt, m_pfp_producer);
+  art::FindManyP<recob::Track> tracks_per_pfpart(pfparticle_handle, evt, m_pfp_producer);
+
+  art::FindManyP<recob::Vertex> vertices_per_pfpart(pfparticle_handle, evt, m_pfp_producer);
   art::FindManyP<recob::Cluster> clusters_per_pfpart(pfparticle_handle, evt, m_pfp_producer);
   art::FindManyP<recob::Hit> hits_per_cluster(cluster_handle, evt, m_pfp_producer);
   auto const &spacepoint_handle =
@@ -166,6 +176,71 @@ void HitsAnalyzer::analyze(art::Event const &evt)
   {
     recob::PFParticle const &pfparticle = pfparticle_handle->at(i_pfp);
     fPdgCode = pfparticle.PdgCode();
+
+    std::vector<art::Ptr<recob::Vertex>> vertex_obj = vertices_per_pfpart.at(i_pfp);
+    fNvertices = vertex_obj.size();
+    std::cout << "Found vertices per pf part with lenght " << fNvertices << ", for pdg = " << fPdgCode << std::endl;
+    if (fNvertices != 0)
+    {
+      double vertex_array[3];
+      vertex_obj[0]->XYZ(vertex_array);
+      fvx = vertex_array[0];
+      fvy = vertex_array[1];
+      fvz = vertex_array[2];
+    }
+    else
+    {
+      std::cout << "Zero vertices, for pdg = " << fPdgCode << std::endl;
+      fvx = 1000000.;
+      fvy = 1000000.;
+      fvz = 1000000.;
+    }
+
+    if (fPdgCode == 11)
+    {
+      std::vector<art::Ptr<recob::Shower>> pf_objs = showers_per_pfpart.at(i_pfp);
+      fNshowers_or_tracks = pf_objs.size();
+      std::cout << "Found shower or tracks per pf part with lenght " << fNshowers_or_tracks << ", for pdg = " << fPdgCode << std::endl;
+      if (fNshowers_or_tracks != 0)
+      {
+        fStartx = pf_objs[0]->ShowerStart().X();
+        fStarty = pf_objs[0]->ShowerStart().Y();
+        fStartz = pf_objs[0]->ShowerStart().Z();
+      }
+      else
+      {
+        fStartx = 1000000.;
+        fStarty = 1000000.;
+        fStartz = 1000000.;
+        std::cout << "No start point found for shower " << fPdgCode << std::endl;
+      }
+    }
+    else if (fPdgCode == 13)
+    {
+      std::vector<art::Ptr<recob::Track>> pf_objs = tracks_per_pfpart.at(i_pfp);
+      fNshowers_or_tracks = pf_objs.size();
+      std::cout << "Found shower or tracks per pf part with lenght " << fNshowers_or_tracks << ", for pdg = " << fPdgCode << std::endl;
+      if (fNshowers_or_tracks != 0)
+      {
+        fStartx = pf_objs[0]->Start().X();
+        fStarty = pf_objs[0]->Start().Y();
+        fStartz = pf_objs[0]->Start().Z();
+      }
+      else
+      {
+        fStartx = 1000000.;
+        fStarty = 1000000.;
+        fStartz = 1000000.;
+        std::cout << "No start point found for track " << fPdgCode << std::endl;
+      }
+    }
+    else
+    {
+      fNshowers_or_tracks = 0;
+      fStartx = 1000000.;
+      fStarty = 1000000.;
+      fStartz = 1000000.;
+    }
 
     fNhits = 0;
     fNhitsU = 0;
@@ -211,23 +286,6 @@ void HitsAnalyzer::analyze(art::Event const &evt)
           fHitsTree->Fill();
         }
       }
-    }
-
-    try
-    {
-      art::Ptr<recob::Vertex> vertex_obj = vertex_per_pfpart.at(i_pfp);
-      double neutrino_vertex[3];
-      vertex_obj->XYZ(neutrino_vertex);
-      fvx = neutrino_vertex[0];
-      fvy = neutrino_vertex[1];
-      fvz = neutrino_vertex[2];
-    }
-    catch (...)
-    {
-      fvx = 1000000.;
-      fvy = 1000000.;
-      fvz = 1000000.;
-      std::cout << "No vertex found for " << fPdgCode << " with " << fNhits << std::endl;
     }
 
     fPFParticlesTree->Fill();

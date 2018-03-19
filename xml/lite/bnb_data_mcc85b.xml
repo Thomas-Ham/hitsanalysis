@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <!DOCTYPE project [
-<!ENTITY name "hits_lite_bnb_nu_cosmic">
+<!ENTITY name "hits_lite_bnb_data_mcc85b">
 <!ENTITY release "v06_26_01_10">
 <!ENTITY qualifier "e10:prof">
-<!ENTITY file_type "mc">
+<!ENTITY file_type "data">
 <!ENTITY run_type "physics">
 <!ENTITY project_version "1">
 <!ENTITY user "foppiani">
-<!ENTITY dataset "prodgenie_bnb_nu_cosmic_uboone_mcc8.7_reco2_dev">
+<!ENTITY dataset "prod_reco_optfilter_bnb_v11_unblind_mcc8b">
 <!ENTITY stage_name "hits">
 <!ENTITY tarball_location "/uboone/app/users/foppiani/Binaries/MyLarsoft/srcs/tar/v3/hits_analyzer.tar">
 <!ENTITY fcl_directory "/uboone/app/users/foppiani/Binaries/MyLarsoft/srcs/hitsanalysis/hitsanalysis/job/">
@@ -53,7 +53,7 @@
     <memory>1024</memory>
     <maxfilesperjob>1</maxfilesperjob>
     <schema>root</schema>
-    <jobsub>  --expected-lifetime=2h -q --generate-email-summary </jobsub>
+    <jobsub>  --expected-lifetime=1h -q --generate-email-summary </jobsub>
   </stage>
 
 </project>
