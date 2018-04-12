@@ -7,7 +7,8 @@
 <!ENTITY run_type "physics">
 <!ENTITY project_version "1">
 <!ENTITY user "foppiani">
-<!ENTITY dataset "prod_reco_optfilter_extbnb_v11_mcc8_dev">
+<!ENTITY dataset "prod_reco_optfilter_extbnb_v11_mcc8a">
+<!-- number of files = 6969 -->
 <!ENTITY stage_name "hits">
 <!ENTITY tarball_location "/uboone/app/users/foppiani/Binaries/MyLarsoft/srcs/tar/v3/hits_analyzer.tar">
 <!ENTITY fcl_directory "/uboone/app/users/foppiani/Binaries/MyLarsoft/srcs/hitsanalysis/hitsanalysis/job/">
@@ -26,6 +27,9 @@
   <!-- Operating System -->
   <os>SL6</os>
 
+  <!--  Project size  -->
+  <numevents>690000</numevents>
+  
   <!-- Batch resources -->
   <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
 
@@ -46,14 +50,14 @@
     <outdir>&main_dir;&name;/v&project_version;/out/</outdir>
     <logdir>&main_dir;&name;/v&project_version;/log/</logdir>
     <workdir>&main_dir;&name;/v&project_version;/work/</workdir>
-    <bookdir>&book_dir;&name;/v&project_version;/<bookdir>
+    <bookdir>&book_dir;&name;/v&project_version;/</bookdir>
 
-    <numjobs>2</numjobs>
-    <disk>1GB</disk>
+    <numjobs>3</numjobs>
+    <disk>4GB</disk>
     <memory>1024</memory>
-    <maxfilesperjob>1</maxfilesperjob>
+    <maxfilesperjob>150</maxfilesperjob>
     <schema>root</schema>
-    <jobsub>  --expected-lifetime=2h -q --generate-email-summary </jobsub>
+    <jobsub>  --expected-lifetime=1h -q --generate-email-summary </jobsub>
   </stage>
 
 </project>

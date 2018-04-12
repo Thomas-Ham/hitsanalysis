@@ -26,6 +26,9 @@
   <!-- Operating System -->
   <os>SL6</os>
 
+  <!--  Project size  -->
+  <numevents>690000</numevents>
+
   <!-- Batch resources -->
   <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
 
@@ -46,7 +49,7 @@
     <outdir>&main_dir;&name;/v&project_version;/out/</outdir>
     <logdir>&main_dir;&name;/v&project_version;/log/</logdir>
     <workdir>&main_dir;&name;/v&project_version;/work/</workdir>
-    <bookdir>&book_dir;&name;/v&project_version;/<bookdir>
+    <bookdir>&book_dir;&name;/v&project_version;/</bookdir>
 
     <numjobs>2</numjobs>
     <disk>1GB</disk>
